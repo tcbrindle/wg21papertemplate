@@ -1,0 +1,78 @@
+\input{common}
+
+\begin{document}
+\title{The paper title}
+\author{
+Author Name1 \small(\href{mailto:name1@xxx.com}{name1@xxx.com}) \\
+Author Name2 \small(\href{mailto:name2@xxx.com}{name1@xxx.com})}
+\date{} %unused. Type date explicitly below.
+\maketitle
+
+\begin{tabular}{ll}
+Document \#: & DXXXPX \\
+Date: &20XX-XX-XX \\
+Project: & Programming Language C++ \\
+Audience: & XXX Working Group
+\end{tabular}
+
+\begin{abstract}
+The abstract goes here.
+\end{abstract}
+
+\section{A section}
+\label{sec:a section}
+
+This is a section. You can add code blocks like this:
+
+\begin{codeblock}
+#include <iostream>
+int main() {
+   std::cout << "Hello, World!\n"; // This is a comment
+}
+\end{codeblock}
+
+You can use inline code like this: \tcode{main()}.
+
+\section{Proposed wording}
+\label{sec:solution}
+
+You can mark your proposed wording changes like this:
+
+\begin{adjustwidth}{1cm}{1cm}
+Here's some \added{added} and some \removed{removed} wording.
+\end{adjustwidth}
+
+Alternatively, you can:
+
+\begin{adjustwidth}{1cm}{1cm}
+\begin{addedblock}
+Add a whole paragraph.
+\end{addedblock}
+\end{adjustwidth}
+
+and
+
+\begin{adjustwidth}{1cm}{1cm}
+\begin{removedblock}
+Remove a whole paragraph.
+\end{removedblock}
+\end{adjustwidth}
+
+The proposed changes are relative to the current working draft \cite{Smith20XX}.
+
+\section*{Document history}
+
+\begin{itemize}
+\item \textbf{R0}, 20XX-XX-XX: Initial version.
+\item \textbf{R1}, 20XX-XX-XX: Changed something.
+\end{itemize}
+
+\section*{Acknowledgements}
+
+Many thanks to XXX.
+
+\renewcommand{\bibname}{References}
+\bibliographystyle{abstract}
+\bibliography{ref}
+
+\end{document}

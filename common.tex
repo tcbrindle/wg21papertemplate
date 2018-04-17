@@ -1,0 +1,651 @@
+%% Common header for WG21 proposals ? mainly taken from C++ standard draft source
+%%
+
+%%--------------------------------------------------
+%% basics
+\documentclass[a4paper,11pt,oneside,openany,final,article]{memoir}
+
+\usepackage[american]
+           {babel}        % needed for iso dates
+\usepackage[iso,american]
+           {isodate}      % use iso format for dates
+\usepackage[final]
+           {listings}     % code listings
+\usepackage{longtable}    % auto-breaking tables
+\usepackage{ltcaption}    % fix captions for long tables
+\usepackage{relsize}      % provide relative font size changes
+\usepackage{textcomp}     % provide \text{l,r}angle
+\usepackage{underscore}   % remove special status of '_' in ordinary text
+\usepackage{parskip}      % handle non-indented paragraphs "properly"
+\usepackage{array}        % new column definitions for tables
+\usepackage[normalem]{ulem}
+\usepackage{enumitem}
+\usepackage{color}        % define colors for strikeouts and underlines
+\usepackage{xcolor}    % needed for blue links
+
+\usepackage{amsmath}      % additional math symbols
+\usepackage{mathrsfs}     % mathscr font
+\usepackage[final]{microtype}
+\usepackage{multicol}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[pdftex, final]{graphicx}
+\usepackage[pdftex,
+            bookmarks=true,
+            bookmarksnumbered=true,
+            pdfpagelabels=true,
+            pdfpagemode=UseOutlines,
+            pdfstartview=FitH,
+            linktocpage=true,
+            colorlinks=true,
+            plainpages=false,
+            allcolors={blue}, 
+            allbordercolors={white}
+           ]{hyperref}
+\usepackage{memhfixc}     % fix interactions between hyperref and memoir
+\usepackage{url}  % urls in ref.bib
+\usepackage{tabularx}  % don't use the C++ standard's fancy tables, they come with captions!
+
+\pdfminorversion=5
+\pdfcompresslevel=9
+\pdfobjcompresslevel=2
+
+\renewcommand\RSsmallest{5.5pt}  % smallest font size for relsize
+
+%%--------------------------------------------------
+%%--------------------------------------------------
+%% Layout -- set overall page appearance
+
+%%--------------------------------------------------
+%%  set page size, type block size, type block position
+
+\setlrmarginsandblock{2.245cm}{2.245cm}{*}
+\setulmarginsandblock{2.5cm}{2.5cm}{*}
+
+%%--------------------------------------------------
+%%  set header and footer positions and sizes
+
+\setheadfoot{\onelineskip}{2\onelineskip}
+\setheaderspaces{*}{2\onelineskip}{*}
+
+%%--------------------------------------------------
+%%  make miscellaneous adjustments, then finish the layout
+\setmarginnotes{7pt}{7pt}{0pt}
+\checkandfixthelayout
+
+%%--------------------------------------------------
+%% If there is insufficient stretchable vertical space on a page,
+%% TeX will not properly consider penalties for a good page break,
+%% even if \raggedbottom (default) is in effect.
+\addtolength{\topskip}{0pt plus 20pt}
+
+%%--------------------------------------------------
+%% Paragraph and bullet numbering
+
+\newcounter{Paras}
+\counterwithout{section}{chapter}
+\setcounter{secnumdepth}{3}
+
+\newcounter{Bullets1}[Paras]
+\newcounter{Bullets2}[Bullets1]
+\newcounter{Bullets3}[Bullets2]
+\newcounter{Bullets4}[Bullets3]
+
+\makeatletter
+\newcommand{\parabullnum}[2]{%
+\stepcounter{#1}%
+\noindent\makebox[0pt][l]{\makebox[#2][r]{%
+\scriptsize\raisebox{.7ex}%
+{%
+\ifnum \value{Paras}>0
+\ifnum \value{Bullets1}>0 (\fi%
+                          \arabic{Paras}%
+\ifnum \value{Bullets1}>0 .\arabic{Bullets1}%
+\ifnum \value{Bullets2}>0 .\arabic{Bullets2}%
+\ifnum \value{Bullets3}>0 .\arabic{Bullets3}%
+\fi\fi\fi%
+\ifnum \value{Bullets1}>0 )\fi%
+\fi%
+}%
+\hspace{\@totalleftmargin}\quad%
+}}}
+\makeatother
+
+\def\pnum{\parabullnum{Paras}{0pt}}
+
+%%--------------------------------------------------
+%%--------------------------------------------------
+%% Styles
+%!TEX root = std.tex
+%% styles.tex -- set styles for:
+%     chapters
+%     pages
+%     footnotes
+
+%%--------------------------------------------------
+%%  create chapter style
+
+\makechapterstyle{cppstd}{%
+  \renewcommand{\beforechapskip}{\onelineskip}
+  \renewcommand{\afterchapskip}{\onelineskip}
+  \renewcommand{\chapternamenum}{}
+  \renewcommand{\chapnamefont}{\chaptitlefont}
+  \renewcommand{\chapnumfont}{\chaptitlefont}
+  \renewcommand{\printchapternum}{\chapnumfont\thechapter\quad}
+  \renewcommand{\afterchapternum}{}
+}
+
+%%--------------------------------------------------
+%%  create page styles
+
+
+
+
+%%--------------------------------------------------
+% set style for main text
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{1ex}
+
+%%--------------------------------------------------
+%% change list item markers to number and em-dash
+
+\renewcommand{\labelitemi}{---\parabullnum{Bullets1}{\labelsep}}
+\renewcommand{\labelitemii}{---\parabullnum{Bullets2}{\labelsep}}
+\renewcommand{\labelitemiii}{---\parabullnum{Bullets3}{\labelsep}}
+\renewcommand{\labelitemiv}{---\parabullnum{Bullets4}{\labelsep}}
+
+
+
+%%--------------------------------------------------
+%% override some functions from the listings package to avoid bad page breaks
+%% (copied verbatim from listings.sty version 1.6 except where commented)
+\makeatletter
+
+\lst@CheckVersion{1.6}{\lst@CheckVersion{1.5b}{
+ \typeout{^^J%
+ ***^^J%
+ *** This file requires listings.sty version 1.6.^^J%
+ *** You have version \lst@version; exiting ...^^J%
+ ***^^J}%
+ \batchmode \@@end}}
+
+\def\lst@Init#1{%
+    \begingroup
+    \ifx\lst@float\relax\else
+        \edef\@tempa{\noexpand\lst@beginfloat{lstlisting}[\lst@float]}%
+        \expandafter\@tempa
+    \fi
+    \ifx\lst@multicols\@empty\else
+        \edef\lst@next{\noexpand\multicols{\lst@multicols}}
+        \expandafter\lst@next
+    \fi
+    \ifhmode\ifinner \lst@boxtrue \fi\fi
+    \lst@ifbox
+        \lsthk@BoxUnsafe
+        \hbox to\z@\bgroup
+             $\if t\lst@boxpos \vtop
+        \else \if b\lst@boxpos \vbox
+        \else \vcenter \fi\fi
+        \bgroup \par\noindent
+    \else
+        \lst@ifdisplaystyle
+            \lst@EveryDisplay
+            % make penalty configurable
+            \par\lst@beginpenalty
+            \vspace\lst@aboveskip
+        \fi
+    \fi
+    \normalbaselines
+    \abovecaptionskip\lst@abovecaption\relax
+    \belowcaptionskip\lst@belowcaption\relax
+    \lst@MakeCaption t%
+    \lsthk@PreInit \lsthk@Init
+    \lst@ifdisplaystyle
+        \global\let\lst@ltxlabel\@empty
+        \if@inlabel
+            \lst@ifresetmargins
+                \leavevmode
+            \else
+                \xdef\lst@ltxlabel{\the\everypar}%
+                \lst@AddTo\lst@ltxlabel{%
+                    \global\let\lst@ltxlabel\@empty
+                    \everypar{\lsthk@EveryLine\lsthk@EveryPar}}%
+            \fi
+        \fi
+        % A section heading might have set \everypar to apply a \clubpenalty
+        % to the following paragraph, changing \everypar in the process.
+        % Unconditionally overriding \everypar is a bad idea.
+        % \everypar\expandafter{\lst@ltxlabel
+        %                      \lsthk@EveryLine\lsthk@EveryPar}%
+    \else
+        \everypar{}\let\lst@NewLine\@empty
+    \fi
+    \lsthk@InitVars \lsthk@InitVarsBOL
+    \lst@Let{13}\lst@MProcessListing
+    \let\lst@Backslash#1%
+    \lst@EnterMode{\lst@Pmode}{\lst@SelectCharTable}%
+    \lst@InitFinalize}
+
+\def\lst@DeInit{%
+    \lst@XPrintToken \lst@EOLUpdate
+    \global\advance\lst@newlines\m@ne
+    \lst@ifshowlines
+        \lst@DoNewLines
+    \else
+        \setbox\@tempboxa\vbox{\lst@DoNewLines}%
+    \fi
+    \lst@ifdisplaystyle \par\removelastskip \fi
+    \lsthk@ExitVars\everypar{}\lsthk@DeInit\normalbaselines\normalcolor
+    \lst@MakeCaption b%
+    \lst@ifbox
+        \egroup $\hss \egroup
+        \vrule\@width\lst@maxwidth\@height\z@\@depth\z@
+    \else
+        \lst@ifdisplaystyle
+            % make penalty configurable
+            \par\lst@endpenalty
+            \vspace\lst@belowskip
+        \fi
+    \fi
+    \ifx\lst@multicols\@empty\else
+        \def\lst@next{\global\let\@checkend\@gobble
+                      \endmulticols
+                      \global\let\@checkend\lst@@checkend}
+        \expandafter\lst@next
+    \fi
+    \ifx\lst@float\relax\else
+        \expandafter\lst@endfloat
+    \fi
+    \endgroup}
+
+
+\def\lst@NewLine{%
+    \ifx\lst@OutputBox\@gobble\else
+        \par
+        % add configurable penalties
+        \lst@ifeolsemicolon
+          \lst@semicolonpenalty
+          \lst@eolsemicolonfalse
+        \else
+          \lst@domidpenalty
+        \fi
+        % Manually apply EveryLine and EveryPar; do not depend on \everypar
+        \noindent \hbox{}\lsthk@EveryLine%
+        % \lsthk@EveryPar uses \refstepcounter which balloons the PDF
+    \fi
+    \global\advance\lst@newlines\m@ne
+    \lst@newlinetrue}
+
+% new macro for empty lines, avoiding an \hbox that cannot be discarded
+\def\lst@DoEmptyLine{%
+  \ifvmode\else\par\fi\lst@emptylinepenalty
+  \vskip\parskip
+  \vskip\baselineskip
+  % \lsthk@EveryLine has \lst@parshape, i.e. \parshape, which causes an \hbox
+  % \lsthk@EveryPar increments line counters; \refstepcounter balloons the PDF
+  \global\advance\lst@newlines\m@ne
+  \lst@newlinetrue}
+
+\def\lst@DoNewLines{
+    \@whilenum\lst@newlines>\lst@maxempty \do
+        {\lst@ifpreservenumber
+            \lsthk@OnEmptyLine
+            \global\advance\c@lstnumber\lst@advancelstnum
+         \fi
+         \global\advance\lst@newlines\m@ne}%
+    \@whilenum \lst@newlines>\@ne \do
+        % special-case empty printing of lines
+        {\lsthk@OnEmptyLine\lst@DoEmptyLine}%
+    \ifnum\lst@newlines>\z@ \lst@NewLine \fi}
+
+% add keys for configuring before/end vertical penalties
+\lst@Key{beginpenalty}\relax{\def\lst@beginpenalty{\penalty #1}}
+\let\lst@beginpenalty\@empty
+\lst@Key{midpenalty}\relax{\def\lst@midpenalty{\penalty #1}}
+\let\lst@midpenalty\@empty
+\lst@Key{endpenalty}\relax{\def\lst@endpenalty{\penalty #1}}
+\let\lst@endpenalty\@empty
+\lst@Key{emptylinepenalty}\relax{\def\lst@emptylinepenalty{\penalty #1}}
+\let\lst@emptylinepenalty\@empty
+\lst@Key{semicolonpenalty}\relax{\def\lst@semicolonpenalty{\penalty #1}}
+\let\lst@semicolonpenalty\@empty
+
+\lst@AddToHook{InitVars}{\let\lst@domidpenalty\@empty}
+\lst@AddToHook{InitVarsEOL}{\let\lst@domidpenalty\lst@midpenalty}
+
+% handle semicolons and closing braces (could be in \lstdefinelanguage as well)
+\def\lst@eolsemicolontrue{\global\let\lst@ifeolsemicolon\iftrue}
+\def\lst@eolsemicolonfalse{\global\let\lst@ifeolsemicolon\iffalse}
+\lst@AddToHook{InitVars}{
+  \global\let\lst@eolsemicolonpending\@empty
+  \lst@eolsemicolonfalse
+}
+% If we found a semicolon or closing brace while parsing the current line,
+% inform the subsequent \lst@NewLine about it for penalties.
+\lst@AddToHook{InitVarsEOL}{%
+  \ifx\lst@eolsemicolonpending\relax
+    \lst@eolsemicolontrue
+    \global\let\lst@eolsemicolonpending\@empty
+  \fi%
+}
+\lst@AddToHook{SelectCharTable}{%
+  % In theory, we should only detect trailing semicolons or braces,
+  % but that would require un-doing the marking for any other character.
+  % The next best thing is to undo the marking for closing parentheses,
+  % because loops or if statements are the only places where we will
+  % reasonably have a semicolon in the middle of a line, and those all
+  % end with a closing parenthesis.
+  \lst@DefSaveDef{41}\lstsaved@closeparen{%    handle closing parenthesis
+    \lstsaved@closeparen
+    \ifnum\lst@mode=\lst@Pmode    % regular processing mode (not a comment)
+      \global\let\lst@eolsemicolonpending\@empty  % undo semicolon setting
+    \fi%
+  }%
+  \lst@DefSaveDef{59}\lstsaved@semicolon{%     handle semicolon
+    \lstsaved@semicolon
+    \ifnum\lst@mode=\lst@Pmode    % regular processing mode (not a comment)
+      \global\let\lst@eolsemicolonpending\relax
+    \fi%
+  }%
+  \lst@DefSaveDef{125}\lstsaved@closebrace{%   handle closing brace
+    \lst@eolsemicolonfalse        % do not break before a closing brace
+    \lstsaved@closebrace          % might invoke \lst@NewLine
+    \ifnum\lst@mode=\lst@Pmode    % regular processing mode (not a comment)
+      \global\let\lst@eolsemicolonpending\relax
+    \fi%
+  }%
+}
+
+\makeatother
+
+
+%%--------------------------------------------------
+%%--------------------------------------------------
+%% Macros
+%!TEX root = std.tex
+% Definitions and redefinitions of special commands
+
+%%--------------------------------------------------
+%% Difference markups
+\definecolor{addclr}{rgb}{0,0.5,0.1}
+\definecolor{remclr}{rgb}{1,0,0}
+\definecolor{noteclr}{rgb}{0,0,1}
+
+\renewcommand{\added}[1]{\textcolor{addclr}{\uline{#1}}}
+\newcommand{\removed}[1]{\textcolor{remclr}{\sout{#1}}}
+\renewcommand{\changed}[2]{\removed{#1}\added{#2}}
+
+\newcommand{\nbc}[1]{[#1]\ }
+\newcommand{\addednb}[2]{\added{\nbc{#1}#2}}
+\newcommand{\removednb}[2]{\removed{\nbc{#1}#2}}
+\newcommand{\changednb}[3]{\removednb{#1}{#2}\added{#3}}
+\newcommand{\remitem}[1]{\item\removed{#1}}
+
+\newcommand{\ednote}[1]{\textcolor{noteclr}{[Editor's note: #1] }}
+% \newcommand{\ednote}[1]{}
+
+\newenvironment{addedblock}
+{
+\color{addclr}
+}
+{
+\color{black}
+}
+\newenvironment{removedblock}
+{
+\color{remclr}
+}
+{
+\color{black}
+}
+
+%%--------------------------------------------------
+% General code style
+\newcommand{\CodeStyle}{\ttfamily}
+\newcommand{\CodeStylex}[1]{\texttt{#1}}
+
+% Code and definitions embedded in text.
+\newcommand{\tcode}[1]{\CodeStylex{#1}}
+\newcommand{\techterm}[1]{\textit{#1}}
+\newcommand{\defnx}[2]{\indexdefn{#2}\textit{#1}}
+\newcommand{\defn}[1]{\defnx{#1}{#1}}
+\newcommand{\term}[1]{\textit{#1}}
+\newcommand{\grammarterm}[1]{\textit{#1}}
+\newcommand{\grammartermnc}[1]{\textit{#1}\nocorr}
+\newcommand{\placeholder}[1]{\textit{#1}}
+\newcommand{\placeholdernc}[1]{\textit{#1\nocorr}}
+
+%%--------------------------------------------------
+%% allow line break if needed for justification
+\newcommand{\brk}{\discretionary{}{}{}}
+
+%%--------------------------------------------------
+%% Macros for funky text
+\newcommand{\Cpp}{\texorpdfstring{C\kern-0.05em\protect\raisebox{.35ex}{\textsmaller[2]{+\kern-0.05em+}}}{C++}}
+\newcommand{\CppIII}{\Cpp{} 2003}
+\newcommand{\CppXI}{\Cpp{} 2011}
+\newcommand{\CppXIV}{\Cpp{} 2014}
+\newcommand{\CppXVII}{\Cpp{} 2017}
+\newcommand{\opt}[1]{\ifthenelse{\equal{#1}{}}
+    {\PackageError{main}{argument must not be empty}{}}
+    {#1\ensuremath{_\mathit{opt}}}}
+\newcommand{\dcr}{-{-}}
+\newcommand{\bigoh}[1]{\ensuremath{\mathscr{O}(#1)}}
+
+% Make all tildes a little larger to avoid visual similarity with hyphens.
+\renewcommand{\~}{\textasciitilde}
+\let\OldTextAsciiTilde\textasciitilde
+\renewcommand{\textasciitilde}{\protect\raisebox{-0.17ex}{\larger\OldTextAsciiTilde}}
+\newcommand{\caret}{\char`\^}
+
+%%--------------------------------------------------
+%% States and operators
+\newcommand{\state}[2]{\tcode{#1}\ensuremath{_{#2}}}
+\newcommand{\bitand}{\ensuremath{\, \mathsf{bitand} \,}}
+\newcommand{\bitor}{\ensuremath{\, \mathsf{bitor} \,}}
+\newcommand{\xor}{\ensuremath{\, \mathsf{xor} \,}}
+\newcommand{\rightshift}{\ensuremath{\, \mathsf{rshift} \,}}
+\newcommand{\leftshift}[1]{\ensuremath{\, \mathsf{lshift}_#1 \,}}
+
+%% Notes and examples
+\newcommand{\noteintro}[1]{[\,\textit{#1:}\space}
+\newcommand{\noteoutro}[1]{\textit{\,---\,end #1}\,]}
+\newenvironment{note}[1][Note]{\noteintro{#1}}{\noteoutro{note}\space}
+\newenvironment{example}[1][Example]{\noteintro{#1}}{\noteoutro{example}\space}
+
+%% Library function descriptions
+\newcommand{\Fundescx}[1]{\textit{#1}}
+\newcommand{\Fundesc}[1]{\Fundescx{#1:}\space}
+\newcommand{\required}{\Fundesc{Required behavior}}
+\newcommand{\requires}{\Fundesc{Requires}}
+\newcommand{\effects}{\Fundesc{Effects}}
+\newcommand{\postconditions}{\Fundesc{Postconditions}}
+\newcommand{\returns}{\Fundesc{Returns}}
+\newcommand{\throws}{\Fundesc{Throws}}
+\newcommand{\default}{\Fundesc{Default behavior}}
+\newcommand{\complexity}{\Fundesc{Complexity}}
+\newcommand{\remarks}{\Fundesc{Remarks}}
+\newcommand{\errors}{\Fundesc{Error conditions}}
+\newcommand{\sync}{\Fundesc{Synchronization}}
+\newcommand{\implimits}{\Fundesc{Implementation limits}}
+\newcommand{\replaceable}{\Fundesc{Replaceable}}
+\newcommand{\returntype}{\Fundesc{Return type}}
+\newcommand{\cvalue}{\Fundesc{Value}}
+\newcommand{\ctype}{\Fundesc{Type}}
+\newcommand{\ctypes}{\Fundesc{Types}}
+\newcommand{\dtype}{\Fundesc{Default type}}
+\newcommand{\ctemplate}{\Fundesc{Class template}}
+\newcommand{\templalias}{\Fundesc{Alias template}}
+
+%% Cross reference
+\newcommand{\xref}{\textsc{See also:}\space}
+
+%% Inline parenthesized reference
+\newcommand{\iref}[1]{\nolinebreak[3] (\ref{#1})}
+
+%% NTBS, etc.
+\newcommand{\NTS}[1]{\textsc{#1}}
+\newcommand{\ntbs}{\NTS{ntbs}}
+\newcommand{\ntmbs}{\NTS{ntmbs}}
+% The following are currently unused:
+% \newcommand{\ntwcs}{\NTS{ntwcs}}
+% \newcommand{\ntcxvis}{\NTS{ntc16s}}
+% \newcommand{\ntcxxxiis}{\NTS{ntc32s}}
+
+%% Code annotations
+\newcommand{\EXPO}[1]{\textit{#1}}
+\newcommand{\expos}{\EXPO{exposition only}}
+\newcommand{\impdef}{\EXPO{implementation-defined}}
+\newcommand{\impdefnc}{\EXPO{implementation-defined\nocorr}}
+\newcommand{\impdefx}[1]{\indeximpldef{#1}\EXPO{implementation-defined}}
+\newcommand{\notdef}{\EXPO{not defined}}
+
+\newcommand{\UNSP}[1]{\textit{\texttt{#1}}}
+\newcommand{\UNSPnc}[1]{\textit{\texttt{#1}\nocorr}}
+\newcommand{\unspec}{\UNSP{unspecified}}
+\newcommand{\unspecnc}{\UNSPnc{unspecified}}
+\newcommand{\unspecbool}{\UNSP{unspecified-bool-type}}
+\newcommand{\seebelow}{\UNSP{see below}}
+\newcommand{\seebelownc}{\UNSPnc{see below}}
+\newcommand{\unspecuniqtype}{\UNSP{unspecified unique type}}
+\newcommand{\unspecalloctype}{\UNSP{unspecified allocator type}}
+
+\newcommand{\EXPLICIT}{\textit{\texttt{EXPLICIT}\nocorr}}
+
+%% Manual insertion of italic corrections, for aligning in the presence
+%% of the above annotations.
+\newlength{\itcorrwidth}
+\newlength{\itletterwidth}
+\newcommand{\itcorr}[1][]{%
+ \settowidth{\itcorrwidth}{\textit{x\/}}%
+ \settowidth{\itletterwidth}{\textit{x\nocorr}}%
+ \addtolength{\itcorrwidth}{-1\itletterwidth}%
+ \makebox[#1\itcorrwidth]{}%
+}
+
+%% Double underscore
+\newcommand{\ungap}{\kern.5pt}
+\newcommand{\unun}{\textunderscore\ungap\textunderscore}
+\newcommand{\xname}[1]{\tcode{\unun\ungap#1}}
+\newcommand{\mname}[1]{\tcode{\unun\ungap#1\ungap\unun}}
+
+%% An elided code fragment, /* ... */, that is formatted as code.
+%% (By default, listings typeset comments as body text.)
+%% Produces 9 output characters.
+\newcommand{\commentellip}{\tcode{/* ...\ */}}
+
+%% Ranges
+\newcommand{\Range}[4]{\tcode{#1#3,\penalty2000{} #4#2}}
+\newcommand{\crange}[2]{\Range{[}{]}{#1}{#2}}
+\newcommand{\brange}[2]{\Range{(}{]}{#1}{#2}}
+\newcommand{\orange}[2]{\Range{(}{)}{#1}{#2}}
+\newcommand{\range}[2]{\Range{[}{)}{#1}{#2}}
+
+%% Change descriptions
+\newcommand{\diffdef}[1]{\hfill\break\textbf{#1:}\space}
+\newcommand{\diffref}[1]{\pnum\textbf{Affected subclause:} \ref{#1}}
+\newcommand{\change}{\diffdef{Change}}
+\newcommand{\rationale}{\diffdef{Rationale}}
+\newcommand{\effect}{\diffdef{Effect on original feature}}
+\newcommand{\difficulty}{\diffdef{Difficulty of converting}}
+\newcommand{\howwide}{\diffdef{How widely used}}
+
+%% Miscellaneous
+\newcommand{\uniquens}{\placeholdernc{unique}}
+\newcommand{\stage}[1]{\item[Stage #1:]}
+\newcommand{\doccite}[1]{\textit{#1}}
+\newcommand{\cvqual}[1]{\textit{#1}}
+\newcommand{\cv}{\cvqual{cv}}
+\newcommand{\numconst}[1]{\textsl{#1}}
+\newcommand{\logop}[1]{{\footnotesize #1}}
+
+%%--------------------------------------------------
+%% Environments for code listings.
+
+% We use the 'listings' package, with some small customizations.  The
+% most interesting customization: all TeX commands are available
+% within comments.  Comments are set in italics, keywords and strings
+% don't get special treatment.
+
+\lstset{language=C++,
+        basicstyle=\small\CodeStyle,
+        keywordstyle=,
+        stringstyle=,
+        xleftmargin=1em,
+        showstringspaces=false,
+        commentstyle=\itshape\rmfamily,
+        columns=fullflexible,
+        keepspaces=true,
+        texcl=true}
+
+% Our usual abbreviation for 'listings'.  Comments are in
+% italics.  Arbitrary TeX commands can be used if they're
+% surrounded by @ signs.
+\newcommand{\CodeBlockSetup}{
+ \lstset{escapechar=@, aboveskip=\parskip, belowskip=0pt,
+         midpenalty=500, endpenalty=-50,
+         emptylinepenalty=-250, semicolonpenalty=0}
+ \renewcommand{\tcode}[1]{\textup{\CodeStylex{##1}}}
+ \renewcommand{\techterm}[1]{\textit{\CodeStylex{##1}}}
+ \renewcommand{\term}[1]{\textit{##1}}
+ \renewcommand{\grammarterm}[1]{\textit{##1}}
+}
+
+\lstnewenvironment{codeblock}{\CodeBlockSetup}{}
+
+% An environment for command / program output that is not C++ code.
+\lstnewenvironment{outputblock}{\lstset{language=}}{}
+
+% A code block in which single-quotes are digit separators
+% rather than character literals.
+\lstnewenvironment{codeblockdigitsep}{
+ \CodeBlockSetup
+ \lstset{deletestring=[b]{'}}
+}{}
+
+% Permit use of '@' inside codeblock blocks (don't ask)
+\makeatletter
+\newcommand{\atsign}{@}
+\makeatother
+
+%%--------------------------------------------------
+%% Indented text
+\newenvironment{indented}[1][]
+{\begin{indenthelper}[#1]\item\relax}
+{\end{indenthelper}}
+
+%%--------------------------------------------------
+%% Library item descriptions
+\lstnewenvironment{itemdecl}
+{
+ \lstset{escapechar=@,
+ xleftmargin=0em,
+ midpenalty=500,
+ semicolonpenalty=-50,
+ endpenalty=3000,
+ aboveskip=2ex,
+ belowskip=0ex	% leave this alone: it keeps these things out of the
+				% footnote area
+ }
+}
+{
+}
+
+\newenvironment{itemdescr}
+{
+ \begin{indented}[beginpenalty=3000, endpenalty=-300]}
+{
+ \end{indented}
+}
+
+%%--------------------------------------------------
+%% add special hyphenation rules
+\hyphenation{tem-plate ex-am-ple in-put-it-er-a-tor name-space name-spaces non-zero}
+
+%%--------------------------------------------------
+%% turn off all ligatures inside \texttt
+\DisableLigatures{encoding = T1, family = tt*}
+
+
+
+
